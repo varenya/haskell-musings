@@ -2,6 +2,8 @@ type Name = String
 
 type Age = Integer
 
+type LastName = String
+
 data Person =
   Person Name
          Age
@@ -21,6 +23,7 @@ mkPerson name age
   | otherwise =
     Left $
     PersonInvalidUnknown $ "Name was " ++ show name ++ " Age was " ++ show age
+
 
 gimmePerson :: IO ()
 gimmePerson = 
