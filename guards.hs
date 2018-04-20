@@ -4,9 +4,6 @@ myAbs x
     | otherwise = x
 
 
-
-
-
 avgGrade :: (Fractional a , Ord a ) => a -> Char
 avgGrade x  
          | y >= 0.9  = 'A'
@@ -39,9 +36,3 @@ foldBool' x y z
 
 g :: (a -> b) -> (a,c) -> (b,c)
 g f (x,y) = (f x, y)
-
-main :: IO ()
-main = 
-    do 
-        putStrLn "Hello World"
-
