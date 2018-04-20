@@ -23,20 +23,28 @@ data Four a b c d =
        d
   deriving (Eq, Show)
 
-instance Semigroup Trivial where
-  _ <> _ = Trivial
-
-instance Arbitrary Trivial where
-  arbitrary = return Trivial
-
-semigroupAssoc :: (Eq m, Semigroup m) => m -> m -> m -> Bool
-semigroupAssoc a b c = (a <> b) <> c == a <> (b <> c)
-
-type TrivialAssoc = Trivial -> Trivial -> Trivial -> Bool
+data Or a b
+  = Fst a
+  | Snd b
+  deriving (Eq, Show)
 
 newtype Identity a =
   Identity a
   deriving (Eq, Show)
+
+newtype BoolConj =
+  BoolConj Bool
+  deriving (Eq, Show)
+
+newtype BoolDisj =
+  BoolDisj Bool
+  deriving (Eq, Show)
+
+semigroupAssoc :: (Eq m, Semigroup m) => m -> m -> m -> Bool
+semigroupAssoc a b c = (a <> b) <> c == a <> (b <> c)
+
+instance Semigroup Trivial where
+  _ <> _ = Trivial
 
 instance Semigroup a => Semigroup (Identity a) where
   (Identity x) <> (Identity y) = Identity (x <> y)
@@ -52,6 +60,21 @@ instance (Semigroup a, Semigroup b, Semigroup c, Semigroup d) =>
          Semigroup (Four a b c d) where
   (Four a1 b1 c1 d1) <> (Four a2 b2 c2 d2) =
     Four (a1 <> a2) (b1 <> b2) (c1 <> c2) (d1 <> d2)
+
+instance (Semigroup a, Semigroup b) => Semigroup (Or a b) where
+  (Fst _) <> (Fst y) = Fst y
+  (Snd x) <> _ = Snd x
+  _ <> (Snd y) = Snd y
+
+instance Semigroup BoolConj where
+  (BoolConj _) <> (BoolConj False) = BoolConj False
+  (BoolConj False) <> (BoolConj _) = BoolConj False
+  (BoolConj True) <> (BoolConj True) = BoolConj True
+
+instance Semigroup BoolDisj where
+  (BoolDisj True) <> (BoolDisj _) = BoolDisj True
+  (BoolDisj _) <> (BoolDisj True) = BoolDisj True
+  (BoolDisj False) <> (BoolDisj False) = BoolDisj False
 
 genIdentity :: Arbitrary a => Gen (Identity a)
 genIdentity = do
@@ -80,6 +103,15 @@ genFour = do
   d <- arbitrary
   return (Four a b c d)
 
+genOrData :: (Arbitrary a, Arbitrary b) => Gen (Or a b)
+genOrData = do
+  a <- arbitrary
+  b <- arbitrary
+  elements [Fst a, Snd b]
+
+instance Arbitrary Trivial where
+  arbitrary = return Trivial
+
 instance Arbitrary a => Arbitrary (Identity a) where
   arbitrary = genIdentity
 
@@ -93,6 +125,17 @@ instance (Arbitrary a, Arbitrary b, Arbitrary c) =>
 instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d) =>
          Arbitrary (Four a b c d) where
   arbitrary = genFour
+
+instance Arbitrary BoolConj where
+  arbitrary = elements [BoolConj True, BoolConj False]
+
+instance Arbitrary BoolDisj where
+  arbitrary = elements [BoolDisj True, BoolDisj False]
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Or a b) where
+  arbitrary = genOrData
+
+type TrivialAssoc = Trivial -> Trivial -> Trivial -> Bool
 
 type IdentityAssoc
    = Identity String -> Identity String -> Identity String -> Bool
@@ -109,6 +152,14 @@ type FourString = Four String String String String
 
 type FourAssoc = FourString -> FourString -> FourString -> Bool
 
+type BoolAssoc = BoolConj -> BoolConj -> BoolConj -> Bool
+
+type BoolDisjAssoc = BoolDisj -> BoolDisj -> BoolDisj -> Bool
+
+type OrString = Or String String
+
+type OrAssoc = OrString -> OrString -> OrString -> Bool
+
 main :: IO ()
 main = do
   putStrLn "Trivial Association"
@@ -121,3 +172,9 @@ main = do
   quickCheck (semigroupAssoc :: ThreeAssoc)
   putStrLn "Four association"
   quickCheck (semigroupAssoc :: FourAssoc)
+  putStrLn "BoolConj Association"
+  quickCheck (semigroupAssoc :: BoolAssoc)
+  putStrLn "BoolDisj Association"
+  quickCheck (semigroupAssoc :: BoolDisjAssoc)
+  putStrLn "Or Association"
+  quickCheck (semigroupAssoc :: OrAssoc)
