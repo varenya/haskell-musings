@@ -28,6 +28,11 @@ data Or a b
   | Snd b
   deriving (Eq, Show)
 
+data Validation a b
+  = VFailure a
+  | VSuccess b
+  deriving (Eq, Show)
+
 newtype Identity a =
   Identity a
   deriving (Eq, Show)
@@ -40,14 +45,37 @@ newtype BoolDisj =
   BoolDisj Bool
   deriving (Eq, Show)
 
+newtype Combine a b = Combine
+  { unCombine :: (a -> b)
+  }
+
+newtype Comp a = Comp
+  { unComp :: (a -> a)
+  }
+
 semigroupAssoc :: (Eq m, Semigroup m) => m -> m -> m -> Bool
 semigroupAssoc a b c = (a <> b) <> c == a <> (b <> c)
+
+combineMappend :: (Semigroup b) => (a -> b) -> (a -> b) -> a -> b
+combineMappend f g arg = f arg <> g arg
 
 instance Semigroup Trivial where
   _ <> _ = Trivial
 
 instance Semigroup a => Semigroup (Identity a) where
   (Identity x) <> (Identity y) = Identity (x <> y)
+
+instance Semigroup a => Semigroup (Validation a b) where
+  (VFailure x) <> (VFailure y) = VFailure (x <> y)
+  (VSuccess x) <> _ = VSuccess x
+  (_) <> VSuccess y = VSuccess y
+
+instance Semigroup b => Semigroup (Combine a b) where
+  (Combine {unCombine = f}) <> (Combine {unCombine = g}) =
+    Combine {unCombine = combineMappend f g}
+
+instance Semigroup a => Semigroup (Comp a) where
+  Comp {unComp = f} <> Comp {unComp = g} = Comp {unComp = combineMappend f g}
 
 instance (Semigroup a, Semigroup b) => Semigroup (Two a b) where
   (Two x1 y1) <> (Two x2 y2) = Two (x1 <> x2) (y1 <> y2)
@@ -178,3 +206,13 @@ main = do
   quickCheck (semigroupAssoc :: BoolDisjAssoc)
   putStrLn "Or Association"
   quickCheck (semigroupAssoc :: OrAssoc)
+
+runValidation :: IO ()
+runValidation = do
+  let failure :: String -> Validation String Int
+      failure = VFailure
+  let success :: Int -> Validation String Int
+      success = VSuccess
+  print $ failure "hello" <> failure "world"
+  print $ success 1 <> success 2
+  print $ failure "why" <> success 2
