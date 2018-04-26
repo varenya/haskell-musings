@@ -38,6 +38,14 @@ class Ping f where
 instance Ping [] where
     pong = map
 
+instance Ping (Either t) where 
+    pong _ (Left x) = Left x
+    pong f (Right y) = Right (f y)
+
+instance Ping ((->) t) where
+    -- pong :: (a -> b) -> (t -> a) -> (t -> b)
+    pong f g = f . g
+
 incMaybe :: (Num a) => Maybe a -> Maybe a
 incMaybe  = fmap (+1) 
 
