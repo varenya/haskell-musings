@@ -32,11 +32,11 @@ validateCoders n
 
 mkSoftware :: Int -> Int -> Either FoundError SoftwareShop
 mkSoftware years coders = do
-  founded <- validateFounded years
-  programmers <- validateCoders coders
-  if programmers > div founded 10
-    then Left $ TooManyCodersForYears founded programmers
-    else Right $ Shop founded programmers
+  founded' <- validateFounded years
+  programmers' <- validateCoders coders
+  if programmers' > div founded' 10
+    then Left $ TooManyCodersForYears founded' programmers'
+    else Right $ Shop founded' programmers'
 
 data Sum a b
   = First a

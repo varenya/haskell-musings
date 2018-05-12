@@ -6,4 +6,5 @@ class MWord m where
     mpush :: a -> m a
     
     mtrans :: (a->b) -> m a -> m b
-    mtrans f = fmap (fmap f mpush) mpull
+    mtrans f =  mpull (mpush . f)
+                    
