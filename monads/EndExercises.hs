@@ -1,5 +1,6 @@
 module EndExercises where
 
+import           Control.Monad
 import           Test.QuickCheck
 import           Test.QuickCheck.Checkers
 import           Test.QuickCheck.Classes
@@ -70,7 +71,13 @@ instance Monad Identity where
   (Identity x) >>= f = f x
 
 instance Eq a => EqProp (Identity a) where
-    (=-=) = eq
+  (=-=) = eq
+
+meh :: Monad m => [a] -> (a -> m b) -> m [b]
+meh [] _ = return []
+meh (x:xs) f =
+  let val = fmap (: []) (f x)
+  in liftM2 (++) val (meh xs f)
 
 main :: IO ()
 main = do

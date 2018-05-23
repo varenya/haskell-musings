@@ -27,6 +27,11 @@ instance Applicative List where
   Nil <*> _ = Nil
   (Cons f fs) <*> list = (fmap f list) <> (fs <*> list)
 
+instance Monad List where
+  return = pure
+  Nil >>= _ = Nil
+  list >>= f = concat' $ fmap f list
+
 append :: List a -> List a -> List a
 append Nil ys         = ys
 append (Cons x xs) ys = Cons x $ xs `append` ys
@@ -90,17 +95,18 @@ instance Applicative ZipList' where
   (<*>) (ZipList' fs) (ZipList' xs) = ZipList' $ (zipListWith fs xs)
 
 zipListWith :: List (a -> b) -> List a -> List b
-zipListWith _ Nil = Nil
-zipListWith Nil _ = Nil
+zipListWith _ Nil                    = Nil
+zipListWith Nil _                    = Nil
 zipListWith (Cons f Nil) (Cons x xs) = Cons (f x) (pure f <*> xs)
 zipListWith (Cons f fs) (Cons x Nil) = Cons (f x) (fs <*> pure x)
 zipListWith (Cons f fs) (Cons x xs)  = Cons (f x) (zipListWith fs xs)
 
-
 main :: IO ()
 main = do
   putStrLn "List test"
-  let z1 = (Cons ("A","b","c") Nil)
+  let z1 = (Cons ("A", "b", "c") Nil)
   quickBatch $ applicative z1
   putStrLn "ZipList test"
-  quickBatch $ applicative (ZipList' (Cons ("A","b","b") Nil))
+  quickBatch $ applicative (ZipList' (Cons ("A", "b", "b") Nil))
+  putStrLn "\nTesting Monad Laws"
+  quickBatch $ monad (Cons ("a", "b","c") Nil)
