@@ -32,3 +32,11 @@ getDog p = Dog (dogName p) (address p)
 
 getDogR :: Person -> Dog
 getDogR = Dog <$> dogName <*> address
+
+getDogRM :: Person -> Dog
+getDogRM = do
+    name <- dogName
+    address <- address
+    return $ Dog name address
+
+instance Monad (Reader r) where

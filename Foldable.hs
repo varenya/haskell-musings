@@ -11,6 +11,10 @@ instance Foldable Identity where
 
 data Optional a = Nada | Yep a deriving (Eq,Show)
 
+instance Functor Optional where
+    fmap _ Nada = Nada
+    fmap f (Yep x) = Yep (f x)
+
 instance Foldable Optional where
     foldr _ z  Nada = z
     foldr f z (Yep x) = f x z
@@ -20,6 +24,11 @@ instance Foldable Optional where
 
     foldMap _ Nada = mempty
     foldMap f (Yep x) = f x
+
+instance Traversable Optional where
+    traverse f Nada = pure Nada
+    traverse f (Yep x) = Yep <$> f x
+
 
 sum' :: (Foldable t, Num a) => t a -> a
 sum'  = getSum . foldMap Sum 

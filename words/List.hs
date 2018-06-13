@@ -32,6 +32,15 @@ instance Monad List where
   Nil >>= _ = Nil
   list >>= f = concat' $ fmap f list
 
+instance Foldable List where
+  foldMap _ Nil = mempty
+  foldMap f (Cons x xs) = (f x) <> (foldMap f xs)
+
+
+instance Traversable List where
+  traverse _ Nil = pure Nil
+  traverse f (Cons x xs) = Cons <$> f x <*> (traverse f xs)
+
 append :: List a -> List a -> List a
 append Nil ys         = ys
 append (Cons x xs) ys = Cons x $ xs `append` ys
@@ -110,3 +119,4 @@ main = do
   quickBatch $ applicative (ZipList' (Cons ("A", "b", "b") Nil))
   putStrLn "\nTesting Monad Laws"
   quickBatch $ monad (Cons ("a", "b","c") Nil)
+  quickBatch $ traversable (Cons ("a","b","c") Nil)
