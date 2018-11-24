@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Project where
@@ -12,12 +14,12 @@ newtype ProjectId = ProjectId
   { unProjectId :: Int
   } deriving (Eq, Show, Num)
 
-data Project
-  = Project ProjectId
-            Text
+data Project a
+  = Project Text
+            a
   | ProjectGroup Text
-                 [Project]
-  deriving (Eq, Show)
+                 [Project a]
+  deriving (Eq, Show, Traversable, Foldable, Functor)
 
 data Budget = Budget
   { budgetIncome      :: Money
